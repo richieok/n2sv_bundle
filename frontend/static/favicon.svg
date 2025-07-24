@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  <!-- Letter "D" shadow (towards north-east) -->
+  <text x="52" y="72" font-family="Arial, sans-serif" font-size="60" font-weight="bold" 
+        fill="#000000" opacity="0.3" text-anchor="middle">D</text>
+  
+  <!-- Letter "D" main -->
+  <text x="50" y="70" font-family="Arial, sans-serif" font-size="60" font-weight="bold" 
+        fill="#4ade80" stroke="#22c55e" stroke-width="2" text-anchor="middle">D</text>
+</svg>
