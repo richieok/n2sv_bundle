@@ -2,3 +2,5 @@ node_modules
 .svelte-kit
 build
 README.md
+Dockerfile
+Dockerfile.dev
