@@ -1,4 +1,17 @@
-const express = require('express');
+import express from 'express';
+import { getParameters } from './aws.js';
+
+const path = '/devconzero/env/';
+
+if (process.env.NODE_ENV === 'production') {
+  if (process.env.CLOUD === 'aws') {
+    getParameters(path).then(() => {
+      console.log('Environment variables loaded successfully');
+    }).catch(error => {
+      console.error('Failed to load environment variables:', error);
+    })
+  }
+}
 
 const app = express();
 

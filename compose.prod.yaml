@@ -2,10 +2,13 @@ services:
   api:
     build:
       context: ./api
-      dockerfile: Dockerfile.aws
+      dockerfile: Dockerfile
     container_name: api_service
     working_dir: /app
     command: npm run start
+    environment:
+      - NODE_ENV=production
+      - CLOUD=aws
     networks:
       - dev_con_net
   frontend:

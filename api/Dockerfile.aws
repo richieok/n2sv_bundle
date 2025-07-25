@@ -8,7 +8,7 @@ WORKDIR /app
 COPY package*.json ./
 COPY entrypoint.sh ./
 RUN chmod +x entrypoint.sh
+RUN npm install
 
 ENTRYPOINT [ "/entrypoint.sh" ]
 
-RUN npm install
