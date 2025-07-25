@@ -5,17 +5,11 @@ const path = '/devconzero/env/';
 
 if (process.env.NODE_ENV === 'production') {
   if (process.env.CLOUD === 'aws') {
-    getParameters(path).then(() => {
-      console.log('Environment variables loaded successfully');
-    }).catch(error => {
-      console.error('Failed to load environment variables:', error);
-    })
+    await getParameters(path)
   }
 }
 
 const app = express();
-
-const TEST = process.env.TEST || 'NOT_FOUND';
 
 app.use(express.urlencoded({ extended: true }))
 app.use(express.json());
@@ -25,7 +19,7 @@ app.get('/api', (req, res) => {
 });
 
 app.get('/api/test', (req, res) => {
-  res.json({ "message": "Test endpoint", "status": "true", "test": TEST })
+  res.json({ "message": "Test endpoint", "status": "true", "test": process.env.TEST || 'NOT_FOUND' });
 });
 
 const PORT = 4000;
