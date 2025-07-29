@@ -19,7 +19,7 @@ services:
     networks:
       - dev_con_net
   web:
-    image: nginx:latest
+    image: nginx:alpine
     container_name: web_service
     ports:
       - "8080:80"
