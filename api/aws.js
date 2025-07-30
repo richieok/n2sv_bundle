@@ -13,7 +13,7 @@ export async function getParameters(path) {
         const response = await client.send(command);
 
         response.Parameters.forEach(param => {
-            console.log(`Loading parameter: ${param.Name} with value: ${param.Value}`);
+            // console.log(`Loading parameter: ${param.Name} with value: ${param.Value}`);
             const key = param.Name.replace(path, '').toUpperCase();
             process.env[key] = param.Value;
         });
