@@ -43,7 +43,7 @@ services:
       dockerfile: Dockerfile.dev
     container_name: web_service
     ports:
-      - "80:80"
+      - "8080:80"
     volumes:
       - ./web/dev/logs:/var/log/nginx
     networks:

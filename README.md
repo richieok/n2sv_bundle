@@ -27,29 +27,38 @@ This scaffold consists of three containerized services:
 
 2. **Start the application**
    ```bash
-   docker-compose up -d
+    #developement build
+    docker-compose up --build -d
+    #or for development with --watch
+    docker-compose --watch up -d
+    # for developement on remote aws ec2 instance
+    # environment variables are provided using aws parameter store
+    docker-compose -f compose.awsdev.yaml up -d
+    #production build
+    docker-compose -f compose.prod.yaml up -d
    ```
 
 3. **Access the application**
    - Frontend: `http://localhost` (proxied through Nginx)
    - API: `http://localhost/api` (proxied through Nginx)
-   - Direct API access: `http://localhost:3000` (if exposed)
+   - App access: `http://localhost` (if exposed)
 
 ## Services Overview
 
 ### API Service (Backend)
 - **Technology**: Node.js
 - **Purpose**: Handles business logic, data processing, and API endpoints
-- **Port**: 3000 (internal)
+- **Port**: 4000 (internal)
 - **Directory**: `./api`
 
-### Web Service (Frontend)
+### Frontend Service (Frontend)
 - **Technology**: SvelteKit
 - **Purpose**: User interface and client-side functionality
-- **Port**: 5173 (internal)
+- **Port**: 5173 (internal, Developement )
+- **Port**: 4000 (internal, Production )
 - **Directory**: `./web`
 
-### Proxy Service (Nginx)
+### Web Proxy Service (Nginx)
 - **Technology**: Nginx
 - **Purpose**: Reverse proxy, load balancing, and serving static assets
 - **Port**: 80 (exposed)
@@ -58,8 +67,8 @@ This scaffold consists of three containerized services:
 ## Development
 
 ### Prerequisites
-- Docker
-- Docker Compose
+- Docker ( At least version 28.3.2 )
+- Docker Compose ( At least version v2.38.2 to use --watch )
 
 ### Environment Setup
 1. Copy environment template files (if any)
@@ -68,8 +77,8 @@ This scaffold consists of three containerized services:
 
 ### Making Changes
 - **API changes**: Edit files in `./api` directory
-- **Frontend changes**: Edit files in `./web` directory
-- **Proxy configuration**: Modify `./nginx/nginx.conf`
+- **Frontend changes**: Edit files in `./frontend` directory
+- **Proxy configuration**: Modify `./web/prod/nginx.conf`( Prod ) / ./web/dev/nginx.conf ( Dev )
 
 ### Rebuilding Services
 ```bash
@@ -107,8 +116,8 @@ This scaffold is designed to be easily customizable:
 ```
 .
 ├── api/                 # Node.js backend service
-├── web/                 # SvelteKit frontend service
-├── nginx/               # Nginx configuration
+├── frontend/                 # SvelteKit frontend service
+├── web/               # Nginx configuration
 │   └── nginx.conf
 ├── docker-compose.yml   # Service orchestration
 └── README.md           # This file
@@ -138,4 +147,4 @@ docker-compose down -v
 
 ---
 
-**Note**: This is a development scaffold. For production deployment, additional considerations for security, performance, and monitoring should be implemented.
+**Note**: This is a development scaffold. For development and production deployment, additional considerations for security, performance, and monitoring should be implemented.
