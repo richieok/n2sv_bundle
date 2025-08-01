@@ -1,15 +1,12 @@
 import express from 'express';
 import { getParameters } from './aws.js';
 
-const path = process.env['SSM_PARAMETER_PATH'] || '/devconzero/env/';
-
-if (process.env.NODE_ENV === 'production') {
-  if (process.env.CLOUD === 'aws') {
-    getParameters(path).then(() => {
-      console.log("Parameters loaded from AWS SSM");
-      startservice();
-    })
-  }
+if (process.env.CLOUD === 'aws') {
+  getParameters(process.env['SSM_PARAMETER_PATH']).then(() => {
+    console.log("Parameters loaded from AWS SSM");
+    startservice();
+  })
+  
 } else {
   console.log("No AWS SSM parameters to load, starting service...");
   startservice();
