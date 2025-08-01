@@ -1,0 +1,64 @@
+services:
+  api:
+    build: ./api
+    container_name: api_service
+    working_dir: /app
+    command: npm run start
+    environment:
+      - PORT=4000
+      - NODE_ENV=development
+      - CLOUD=aws
+      - SSM_PARAMETER_PATH=/devconzero/env/
+    networks:
+      - dev_con_net
+    develop:
+      watch:
+        - path: ./api/package.json
+          action: rebuild
+        - path: ./api/package-lock.json
+          action: rebuild
+        - path: ./api
+          target: /app
+          action: sync+restart
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    container_name: frontend_service
+    networks:
+      - dev_con_net
+    develop:
+      watch:
+        - path: ./frontend/package.json
+          action: rebuild
+        - path: ./frontend/package-lock.json
+          action: rebuild
+        - path: ./frontend
+          target: /app
+          action: sync+restart
+  web:
+    build:
+      context: ./web
+      dockerfile: Dockerfile.dev
+    container_name: web_service
+    ports:
+      - "8080:80"
+    volumes:
+      - ./web/dev/logs:/var/log/nginx
+    networks:
+      - dev_con_net
+    depends_on:
+      - api
+      - frontend
+    develop:
+      watch:
+        - path: ./web/dev/nginx.conf
+          action: sync+restart
+          target: /etc/nginx/nginx.conf
+networks:
+  dev_con_net:
+    driver: bridge
+volumes:
+  nginx-prod-logs:
+    driver: local
+    
