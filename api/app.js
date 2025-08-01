@@ -1,4 +1,5 @@
 import express from 'express';
+import multer from 'multer'
 import { getParameters } from './aws.js';
 
 if (process.env.CLOUD === 'aws') {
@@ -14,8 +15,10 @@ if (process.env.CLOUD === 'aws') {
 
 async function startservice() {
   console.log("Starting service...");
+  let { authenticateToken, login, registerUser } = await import('./auth.js');
 
   const app = express();
+  const upload = multer()
   
   app.use(express.urlencoded({ extended: true }))
   app.use(express.json());
@@ -27,6 +30,8 @@ async function startservice() {
   app.get('/api/test', (req, res) => {
     res.json({ "message": "Test endpoint", "status": "true", "test": process.env.TEST || 'NOT_FOUND' });
   });
+
+  app.post('/api/login', upload.none(), login);
   
   const PORT = process.env.PORT || 4000;
   

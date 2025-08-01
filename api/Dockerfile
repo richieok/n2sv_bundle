@@ -4,7 +4,6 @@ FROM node:alpine
 WORKDIR /app
 # Copy package.json and package-lock.json
 COPY package*.json ./
-COPY app.js ./
-COPY aws.js ./
+COPY . ./
 
 RUN npm install
