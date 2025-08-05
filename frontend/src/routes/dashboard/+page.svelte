@@ -1,4 +1,5 @@
 <script>
+	import { io } from 'socket.io-client';
 	import { onMount } from 'svelte';
 	import RecvPending from './RecvPendRequests.svelte';
 	import SentPendRequests from './SentPendRequests.svelte';
@@ -6,8 +7,12 @@
 	import Test from './Test.svelte';
 
 	let friendUname;
+	let ioMessage;
 
-	let friends = $state([])
+	let socket;
+	let chatMessages = $state([]);
+
+	let friends = $state([]);
 	let pendingRequests = $state([]);
 	let pendingSentRequests = $state([]);
 
@@ -53,10 +58,16 @@
 				pendingSentRequests.push(request);
 			});
 		}
-		await getFriends(token)
+		await getFriends(token);
 	}
 
 	onMount(async () => {
+		socket = io({
+			path: '/api/socketio//'
+		});
+		socket.on('chat message', (msg) => {
+			chatMessages.push(msg);
+		});
 		// Additional setup can be done here if needed
 		console.log('Dashboard component mounted');
 		let token = localStorage.getItem('token');
@@ -94,10 +105,10 @@
 				return;
 			}
 		}
-		console.log(data.friends)
-		data.friends.forEach( friend => {
-			friends.push(friend)
-		})
+		console.log(data.friends);
+		data.friends.forEach((friend) => {
+			friends.push(friend);
+		});
 	}
 
 	async function sendFriendRequest() {
@@ -164,6 +175,13 @@
 	function testClick(evt) {
 		console.log(evt.target.dataset.action);
 	}
+
+	function ioSubmit(evt) {
+		evt.preventDefault();
+		if (!ioMessage.value) return;
+		socket.emit('chat message', ioMessage.value);
+		ioMessage.value = '';
+	}
 </script>
 
 <h1>Dashboard</h1>
@@ -189,12 +207,23 @@
 </div>
 <div>
 	<h3>Friends</h3>
-	<Friends friends={friends}/>
+	<Friends {friends} />
 </div>
+<form onsubmit={ioSubmit}>
+	<input type="text" bind:this={ioMessage} />
+	<button type="submit">Send</button>
+</form>
+{#if chatMessages.length}
+	<ul>
+		{#each chatMessages as msg}
+			<li>{msg}</li>
+		{/each}
+	</ul>
+{/if}
 
 <style>
 	ul {
-		/* padding-inline-start: 0; */
+		padding-inline-start: 1em;
 		list-style-type: none;
 	}
 </style>

@@ -1,5 +1,7 @@
 import express from 'express';
+import { createServer } from 'node:http'
 import multer from 'multer'
+import { Server } from 'socket.io';
 import { getFriends, sendFriendReq, pendingFriendRequests, acceptFriendReq } from './middleware/chatapp-cmds.js';
 import { getParameters } from './aws.js';
 
@@ -19,6 +21,10 @@ async function startservice() {
   let { authenticateToken, login, registerUser } = await import('./auth.js');
 
   const app = express();
+  const server = createServer(app);
+  const io = new Server(server, {
+    path: "/api/socketio/"
+  });
   const upload = multer()
 
   app.use(express.urlencoded({ extended: true }))
@@ -46,9 +52,20 @@ async function startservice() {
 
   app.get('/api/friends', authenticateToken, getFriends)
 
+  io.on('connection', (socket) => {
+    console.log('A user connected');
+    socket.on('disconnect', () => {
+      console.log('User disconnected');
+    });
+    socket.on('chat message', (msg) => {
+      console.log('message: ' + msg);
+      io.emit('chat message', `Received: ${msg}`);
+    });
+  })
+
   const PORT = process.env.PORT || 4000;
 
-  app.listen(PORT, () => {
+  server.listen(PORT, () => {
     console.log(`API server is running on port ${PORT}`);
   });
 }
