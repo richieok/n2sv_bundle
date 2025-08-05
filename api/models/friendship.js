@@ -1,5 +1,4 @@
-const mongoose = require('mongoose');
-const { Schema } = mongoose;
+import { model, Schema } from 'mongoose';
 
 // Friendship Schema
 const friendshipSchema = new Schema({
@@ -57,7 +56,7 @@ friendshipSchema.index({ recipient: 1, status: 1 });
 friendshipSchema.index({ status: 1, createdAt: -1 });
 
 // Pre-save middleware to prevent self-friendship
-friendshipSchema.pre('save', function(next) {
+friendshipSchema.pre('save', function (next) {
   if (this.requester.equals(this.recipient)) {
     const error = new Error('Users cannot befriend themselves');
     return next(error);
@@ -66,7 +65,7 @@ friendshipSchema.pre('save', function(next) {
 });
 
 // Pre-save middleware to set acceptedAt when status changes to accepted
-friendshipSchema.pre('save', function(next) {
+friendshipSchema.pre('save', function (next) {
   if (this.isModified('status') && this.status === 'accepted' && !this.acceptedAt) {
     this.acceptedAt = new Date();
   }
@@ -74,28 +73,28 @@ friendshipSchema.pre('save', function(next) {
 });
 
 // Instance Methods
-friendshipSchema.methods.accept = function() {
+friendshipSchema.methods.accept = function () {
   this.status = 'accepted';
   this.acceptedAt = new Date();
   return this.save();
 };
 
-friendshipSchema.methods.decline = function() {
+friendshipSchema.methods.decline = function () {
   this.status = 'declined';
   return this.save();
 };
 
-friendshipSchema.methods.block = function() {
+friendshipSchema.methods.block = function () {
   this.status = 'blocked';
   return this.save();
 };
 
-friendshipSchema.methods.getOtherUser = function(currentUserId) {
+friendshipSchema.methods.getOtherUser = function (currentUserId) {
   return this.requester.equals(currentUserId) ? this.recipient : this.requester;
 };
 
 // Static Methods
-friendshipSchema.statics.findFriendship = function(userId1, userId2) {
+friendshipSchema.statics.findFriendship = function (userId1, userId2) {
   return this.findOne({
     $or: [
       { requester: userId1, recipient: userId2 },
@@ -104,22 +103,46 @@ friendshipSchema.statics.findFriendship = function(userId1, userId2) {
   });
 };
 
-friendshipSchema.statics.getFriends = function(userId, populateUsers = false) {
-  const query = this.find({
+// friendshipSchema.statics.getFriends = function(userId, populateUsers = false) {
+//   const query = this.find({
+//     $or: [
+//       { requester: userId },
+//       { recipient: userId }
+//     ],
+//     status: 'accepted'
+//   });
+
+//   if (populateUsers) {
+//     return query.populate('requester recipient', 'username email avatar');
+//   }
+//   return query;
+// };
+
+friendshipSchema.statics.getFriends = async function (userId) {
+  // Find all accepted friendships involving the user
+  const friendships = await this.find({
     $or: [
       { requester: userId },
       { recipient: userId }
     ],
     status: 'accepted'
-  });
+  }).populate('requester recipient', 'username email');
 
-  if (populateUsers) {
-    return query.populate('requester recipient', 'username email avatar');
-  }
-  return query;
+  // Map friendships to return only friend info (exclude current user)
+  return friendships.map(friendship => {
+    const friend = friendship.requester._id.equals(userId)
+      ? friendship.recipient
+      : friendship.requester;
+
+    return {
+      _id: friend._id,
+      username: friend.username,
+      email: friend.email
+    };
+  });
 };
 
-friendshipSchema.statics.getPendingRequests = function(userId, type = 'received') {
+friendshipSchema.statics.getPendingRequests = function (userId, type = 'received') {
   const filter = {
     status: 'pending'
   };
@@ -133,15 +156,15 @@ friendshipSchema.statics.getPendingRequests = function(userId, type = 'received'
   return this.find(filter).populate('requester recipient', 'username email avatar');
 };
 
-friendshipSchema.statics.areFriends = async function(userId1, userId2) {
+friendshipSchema.statics.areFriends = async function (userId1, userId2) {
   const friendship = await this.findFriendship(userId1, userId2);
   return friendship && friendship.status === 'accepted';
 };
 
-friendshipSchema.statics.createFriendRequest = async function(requesterId, recipientId, metadata = {}) {
+friendshipSchema.statics.createFriendRequest = async function (requesterId, recipientId, metadata = {}) {
   // Check if friendship already exists
   const existingFriendship = await this.findFriendship(requesterId, recipientId);
-  
+
   if (existingFriendship) {
     throw new Error('Friendship already exists');
   }
@@ -156,7 +179,7 @@ friendshipSchema.statics.createFriendRequest = async function(requesterId, recip
   return friendship.save();
 };
 
-friendshipSchema.statics.getFriendCount = function(userId) {
+friendshipSchema.statics.getFriendCount = function (userId) {
   return this.countDocuments({
     $or: [
       { requester: userId },
@@ -167,25 +190,25 @@ friendshipSchema.statics.getFriendCount = function(userId) {
 };
 
 // Virtual for getting friend user details
-friendshipSchema.virtual('friend').get(function() {
+friendshipSchema.virtual('friend').get(function () {
   // This would be populated based on context of which user is viewing
   return this.populated('requester') || this.populated('recipient');
 });
 
 // Transform output to remove sensitive data
-friendshipSchema.methods.toJSON = function() {
+friendshipSchema.methods.toJSON = function () {
   const friendship = this.toObject();
-  
+
   // Only include metadata if friendship is accepted
   if (friendship.status !== 'accepted') {
     delete friendship.metadata;
   }
-  
+
   return friendship;
 };
 
 // Create the model
-const Friendship = mongoose.model('Friendship', friendshipSchema);
+export const Friendship = model('Friendship', friendshipSchema);
 
 // Usage Examples:
 
@@ -216,5 +239,3 @@ const friendCount = await Friendship.getFriendCount(userId);
 // Find specific friendship
 const friendship = await Friendship.findFriendship(userId1, userId2);
 */
-
-module.exports = Friendship;

@@ -24,7 +24,7 @@ export const authenticateToken = async (req, res, next) => {
         console.log("Post verify");
         // console.log(decoded);
 
-        req.user = { username: decoded.username, email: decoded.email }
+        req.user = { id: decoded.userId, username: decoded.username, email: decoded.email }
         next()
     } catch (error) {
         return res.status(403).json({ error: 'Invalid token' })
