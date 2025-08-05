@@ -2,7 +2,6 @@ import express from 'express';
 import { createServer } from 'node:http'
 import multer from 'multer'
 import { Server } from 'socket.io';
-import { getFriends, sendFriendReq, pendingFriendRequests, acceptFriendReq } from './middleware/chatapp-cmds.js';
 import { getParameters } from './aws.js';
 
 if (process.env.CLOUD === 'aws') {
@@ -10,7 +9,7 @@ if (process.env.CLOUD === 'aws') {
     console.log("Parameters loaded from AWS SSM");
     startservice();
   })
-
+  
 } else {
   console.log("No AWS SSM parameters to load, starting service...");
   startservice();
@@ -19,6 +18,7 @@ if (process.env.CLOUD === 'aws') {
 async function startservice() {
   console.log("Starting service...");
   let { authenticateToken, login, registerUser } = await import('./auth.js');
+  let { getFriends, sendFriendReq, pendingFriendRequests, acceptFriendReq } =  await import('./middleware/chatapp-cmds.js');
 
   const app = express();
   const server = createServer(app);

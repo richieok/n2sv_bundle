@@ -10,8 +10,8 @@ export default defineConfig({
 	plugins: [sveltekit()],
 	server: {
 		allowedHosts: [
-			// "website.com", 
-			// "www.website.com"
+			'devconzero.com.ng', 
+			'www.devconzero.com.ng'
 		]
 	}
 });
