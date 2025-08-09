@@ -1,7 +1,12 @@
+<script>
+    let { logout } = $props()
+</script>
+
 <div>
     <ul>
         <li><a href="/">Home</a></li>
         <li><a href="/dashboard">Dashboard</a></li>
+        <li><a href="/logout" data-sveltekit-preload-data="tap">logout</a></li>
     </ul>
 </div>
 
@@ -22,5 +27,8 @@
         color: white;
         text-decoration: none;
         padding: 0.5rem 1rem;
+    }
+    li {
+        text-transform: capitalize;
     }
 </style>

@@ -1,6 +1,17 @@
 <script>
+	import { browser } from "$app/environment";
+	import { goto } from "$app/navigation";
+
+	let { form, data } = $props();
+
+	if ( browser && form?.success){
+		console.log(form.message)
+		localStorage.setItem("user", JSON.stringify(form.user))
+		goto("/dashboard")
+	}
+
 	async function handleSubmit(evt) {
-        evt.preventDefault(); // Prevent the default form submission
+		evt.preventDefault(); // Prevent the default form submission
 		const formData = new FormData(form);
 
 		const response = await fetch('/api/login', {
@@ -23,14 +34,16 @@
 	}
 </script>
 
-<div id="message" class="banner-message"></div>
-<form id="form" method="POST">
+{#if !(form?.success)}
+	<div id="message" class="banner-message">{form?.message}</div>
+{/if}
+<form id="form" method="post" action="?/login">
 	<h1>Login</h1>
 	<label for="username">Username / Email: </label>
-	<input type="text" id="username" name="username" placeholder="Username / Email" />
+	<input type="text" id="username" name="username" placeholder="Username / Email" value="{form?.username ?? ''}" />
 	<br />
 	<label for="password" type="password">Password: </label>
 	<input type="password" id="password" name="password" placeholder="Password" />
 	<br />
-	<button type="submit" onclick={handleSubmit} id="login">Login</button>
+	<button type="submit" id="login">Login</button>
 </form>

@@ -18,7 +18,7 @@
 		list-style-type: none;
 		padding: 1em;
         width: 200px;
-        border-radius: 1em;
+        border-radius: .3em;
 		background: #86959e;
 	}
 </style>

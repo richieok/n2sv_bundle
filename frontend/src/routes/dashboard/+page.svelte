@@ -1,11 +1,24 @@
 <script>
 	import { io } from 'socket.io-client';
-	import { onMount } from 'svelte';
+	import { onMount, onDestroy } from 'svelte';
+	import { browser } from '$app/environment';
 	import RecvPending from './RecvPendRequests.svelte';
 	import SentPendRequests from './SentPendRequests.svelte';
 	import Friends from './Friends.svelte';
 	import Test from './Test.svelte';
+	import MessageUI from './MessageUI.svelte';
 
+	let { data } = $props();
+
+	if (browser) {
+		console.log('browser app env');
+		console.log(data.user);
+		sessionStorage.setItem('tokenX', data.tokenX);
+		localStorage.setItem('user', JSON.stringify(data?.user));
+	}
+
+	let username = $state('');
+	let selectedFriend;
 	let friendUname;
 	let ioMessage;
 
@@ -34,7 +47,7 @@
 					return;
 				}
 			}
-			console.log(data);
+			// console.log(data);
 			data.requests.forEach((request) => {
 				pendingRequests.push(request);
 			});
@@ -62,32 +75,59 @@
 	}
 
 	onMount(async () => {
-		socket = io({
-			path: '/api/socketio//'
-		});
-		socket.on('chat message', (msg) => {
-			chatMessages.push(msg);
-		});
-		// Additional setup can be done here if needed
-		console.log('Dashboard component mounted');
-		let token = localStorage.getItem('token');
-		if (!token) {
-			console.log('No token found, redirecting to login page.');
-			localStorage.clear();
-			window.location.href = '/';
-			return;
-		}
+		// socket = io({
+		// 	path: '/api/socketio//',
+		// 	autoConnect: false
+		// });
+		console.log('onMount ---< ');
+		// console.log(data.user)
+		// console.log(data.tokenX)
+
+		// let t = sessionStorage.getItem("tokenX")
 		try {
-			await loadDashboard(token);
-			const user = JSON.parse(localStorage.getItem('user'));
+			await loadDashboard(data.tokenX);
+			socket = io({
+				path: '/api/socketio/'
+			});
+			socket.on("disconnect", ()=>{
+				console.log("Diconnected!")
+			})
+			// socket.auth = { username: data.user.username };
+			// socket.connect();
+			// socket.on('connect_error', (err) => {
+			// 	if (err.message === 'invalid username') {
+			// 		console.log(err.message);
+			// 		return () => {
+			// 			socket.off('connect_error');
+			// 		};
+			// 	}
+			// });
+			// socket.on('user connected', (user) => {
+			// 	console.log(user);
+			// });
+			// socket.on('chat message', (msg) => {
+			// 	chatMessages.push(msg);
+			// });
 		} catch (error) {
-			console.error(error);
 			if (error.message === 'Invalid token') {
-				localStorage.clear();
-				window.location.href = '/';
+				// window.location.href = '/';
 				return;
 			}
+			console.log(error);
 		}
+
+		// try {
+		// 	const user = JSON.parse(localStorage.getItem('user'));
+		// 	username = user.username;
+
+		// } catch (error) {
+		// 	console.error(error);
+		// 	if (error.message === 'Invalid token') {
+		// 		localStorage.clear();
+		// 		// window.location.href = '/';
+		// 		return;
+		// 	}
+		// }
 	});
 
 	async function getFriends(token) {
@@ -105,7 +145,7 @@
 				return;
 			}
 		}
-		console.log(data.friends);
+		// console.log(data.friends);
 		data.friends.forEach((friend) => {
 			friends.push(friend);
 		});
@@ -178,13 +218,24 @@
 
 	function ioSubmit(evt) {
 		evt.preventDefault();
-		if (!ioMessage.value) return;
+		if (ioMessage.value === "") return;
 		socket.emit('chat message', ioMessage.value);
+		// if (!selectedFriend) return;
+		// socket.emit('private message', {
+		// 	content: ioMessage.value,
+		// 	to: 'd'
+		// });
 		ioMessage.value = '';
+	}
+
+	function selectFriend(evt) {
+		console.log(evt.target.dataset.btnName);
+		if (!evt.target.dataset.btnName) return;
+		selectedFriend = evt.target.dataset.btnName;
 	}
 </script>
 
-<h1>Dashboard</h1>
+<h1>{data?.user.username}</h1>
 <div>
 	<form
 		onsubmit={(evt) => {
@@ -205,23 +256,30 @@
 	<SentPendRequests onClick={cancelRequest} requests={pendingSentRequests} />
 	<Test action="pewpew" onClick={testClick}></Test>
 </div>
-<div>
-	<h3>Friends</h3>
-	<Friends {friends} />
-</div>
+<MessageUI>
+	<div>
+		<h3>Friends</h3>
+		<Friends {friends} {selectFriend} />
+	</div>
+	<div>
+		{#if chatMessages.length}
+			<ul>
+				{#each chatMessages as msg}
+					<li>{msg}</li>
+				{/each}
+			</ul>
+		{/if}
+	</div>
+</MessageUI>
 <form onsubmit={ioSubmit}>
 	<input type="text" bind:this={ioMessage} />
 	<button type="submit">Send</button>
 </form>
-{#if chatMessages.length}
-	<ul>
-		{#each chatMessages as msg}
-			<li>{msg}</li>
-		{/each}
-	</ul>
-{/if}
 
 <style>
+	h1 {
+		text-transform: capitalize;
+	}
 	ul {
 		padding-inline-start: 1em;
 		list-style-type: none;

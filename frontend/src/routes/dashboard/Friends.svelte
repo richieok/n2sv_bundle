@@ -1,20 +1,22 @@
 <script>
-	let { friends = [] } = $props();
+	let { friends = [], selectFriend } = $props();
 </script>
 
-<ul>
+<ul onpointerdown="{selectFriend}">
 	{#each friends as friend}
-		<li>{friend.username}</li>
+		<li><button data-btn-name={friend.username}>{friend.username}</button></li>
 	{/each}
 </ul>
 
 <style>
 	ul {
+		display: flex;
+		flex-direction: column;
 		padding-inline-start: 1em;
 		list-style-type: none;
 		padding: 1em;
         width: 200px;
-        border-radius: 1em;
+        border-radius: .3em;
 		background: #86959e;
 		background: linear-gradient(
 			90deg,
@@ -22,5 +24,9 @@
 			rgba(223, 223, 242, 1) 0%,
 			rgba(189, 204, 240, 1) 100%
 		);
+	}
+	button {
+		width: 100%;
+		text-align: left;
 	}
 </style>

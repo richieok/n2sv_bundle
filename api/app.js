@@ -2,6 +2,7 @@ import express from 'express';
 import { createServer } from 'node:http'
 import multer from 'multer'
 import { Server } from 'socket.io';
+import { checkUsername } from './middleware/socket-middleware.js';
 import { getParameters } from './aws.js';
 
 if (process.env.CLOUD === 'aws') {
@@ -9,7 +10,7 @@ if (process.env.CLOUD === 'aws') {
     console.log("Parameters loaded from AWS SSM");
     startservice();
   })
-  
+
 } else {
   console.log("No AWS SSM parameters to load, starting service...");
   startservice();
@@ -18,7 +19,7 @@ if (process.env.CLOUD === 'aws') {
 async function startservice() {
   console.log("Starting service...");
   let { authenticateToken, login, registerUser } = await import('./auth.js');
-  let { getFriends, sendFriendReq, pendingFriendRequests, acceptFriendReq } =  await import('./middleware/chatapp-cmds.js');
+  let { getFriends, sendFriendReq, pendingFriendRequests, acceptFriendReq } = await import('./middleware/chatapp-cmds.js');
 
   const app = express();
   const server = createServer(app);
@@ -43,6 +44,9 @@ async function startservice() {
   app.post('/api/register', upload.none(), registerUser);
 
   // app.get('/api/profile', authenticateToken, getProfile);
+  app.get('/api/auth', authenticateToken, async (req, res) => {
+    res.status(200).json({ "message": "Authenticated", "user": req.user });
+  });
 
   app.get('/api/send-friend-request', authenticateToken, sendFriendReq)
 
@@ -52,15 +56,36 @@ async function startservice() {
 
   app.get('/api/friends', authenticateToken, getFriends)
 
+  // io.use(checkUsername);
+
+  let sidMap = new Map();
+
   io.on('connection', (socket) => {
-    console.log('A user connected');
-    socket.on('disconnect', () => {
-      console.log('User disconnected');
-    });
-    socket.on('chat message', (msg) => {
-      console.log('message: ' + msg);
-      io.emit('chat message', `Received: ${msg}`);
-    });
+    console.log(`${socket.id} connected`);
+    socket.on("disconnect", () => {
+      console.log(`${socket.id} disconnected`)
+    })
+
+    // sidMap.set(socket.id, socket.username);
+    // socket.broadcast.emit("user connected", {
+    //   userID: socket.id,
+    //   username: socket.username,
+    // });
+
+    // socket.on('disconnect', () => {
+    //   sidMap.delete(socket.id);
+    //   console.log(`User: ${socket.id} disconnected`);
+    // });
+
+    // socket.on('chat message', (msg) => {
+    //   console.log('message: ' + msg);
+    //   io.emit('chat message', `Received: ${msg}`);
+    // });
+    if (process.env.NODE_ENV === "development") {
+      socket.onAny((event, ...args) => {
+        console.log(event, args);
+      });
+    }
   })
 
   const PORT = process.env.PORT || 4000;
